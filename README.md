@@ -157,8 +157,3 @@ Built-in tasks live in `src/tasks/tasks.json`. Users can also import tasks at ru
 ```
 
 For importing: wrap in `{ "tasks": [...] }` or provide a single task object — both formats accepted.
-
-## Testing
-
-- `npm run test` — unit + e2e tests via Vitest
-- Test files: `src/tests/core.test.ts` (unit), `src/tests/e2e.test.ts` (integration)
