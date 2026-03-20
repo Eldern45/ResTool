@@ -1,9 +1,9 @@
-import { useState, useRef, useCallback } from 'react';
-import { ProofSession } from '../core/session';
-import { parseClause, parseSubstitution } from '../core/parser';
-import { getTaskConstants } from '../core/taskLoaderBrowser';
-import { EMPTY_SUBSTITUTION } from '../core/types';
-import type { Task, SessionState, AnswerValidationResult } from '../core/types';
+import {useCallback, useRef, useState} from 'react';
+import {ProofSession} from '../core/session';
+import {parseClause, parseSubstitution} from '../core/parser';
+import {getTaskConstants} from '../core/taskLoaderBrowser';
+import type {AnswerValidationResult, SessionState, Task} from '../core/types';
+import {EMPTY_SUBSTITUTION} from '../core/types';
 
 const SESSION_KEY_PREFIX = 'restool-session-';
 
@@ -84,8 +84,7 @@ export function useProofSession(task: Task) {
 
   const reset = useCallback(() => {
     localStorage.removeItem(SESSION_KEY_PREFIX + task.id);
-    const fresh = new ProofSession(task, parsedClauses, constants);
-    sessionRef.current = fresh;
+    sessionRef.current = new ProofSession(task, parsedClauses, constants);
     sync();
   }, [task, parsedClauses, constants]);
 
