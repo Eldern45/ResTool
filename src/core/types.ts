@@ -89,7 +89,6 @@ export interface Task {
   readonly logicType: TaskLogicType;
   readonly clauses: readonly string[];
   readonly constants?: readonly string[];
-  readonly hints?: readonly string[];
 }
 
 export interface TaskFile {
