@@ -1,17 +1,8 @@
 {
   "tasks": [
     {
-      "id": "111",
-      "title": "Introduction",
-      "logicType": "predicate",
-      "clauses": [
-        "{V(f(x), x)}", "{~V(x, y), ~V(y, z), W(x, z)}", "{~W(y, a)}"
-      ],
-      "constants": ["a"]
-    },
-    {
       "id": "prop-01",
-      "title": "Simple propositional resolution",
+      "title": "Propositional resolution 1",
       "logicType": "propositional",
       "clauses": [
         "{A, B}",
@@ -22,29 +13,18 @@
     },
     {
       "id": "prop-02",
-      "title": "Three-variable propositional",
+      "title": "Propositional resolution 2",
       "logicType": "propositional",
       "clauses": [
-        "{P, Q}",
-        "{~P, R}",
-        "{~Q, R}",
-        "{~R}"
-      ]
-    },
-    {
-      "id": "prop-03",
-      "title": "Propositional chain",
-      "logicType": "propositional",
-      "clauses": [
+        "{~A, B, C}",
+        "{~A, ~C}",
         "{A}",
-        "{~A, B}",
-        "{~B, C}",
-        "{~C}"
+        "{~A, ~B, C}"
       ]
     },
     {
       "id": "pred-01",
-      "title": "Simple predicate resolution",
+      "title": "Predicate resolution 1",
       "logicType": "predicate",
       "clauses": [
         "{P(x), Q(x)}",
@@ -55,7 +35,7 @@
     },
     {
       "id": "pred-02",
-      "title": "Function symbols",
+      "title": "Predicate resolution 2",
       "logicType": "predicate",
       "clauses": [
         "{P(x, f(x))}",
@@ -69,26 +49,12 @@
       "title": "Multi-step predicate resolution",
       "logicType": "predicate",
       "clauses": [
-        "{P(x), Q(x, f(x))}",
-        "{~P(g(y)), R(y)}",
-        "{~Q(g(a), z)}",
-        "{~R(a)}"
+        "{~P(x), Q(x)}",
+        "{P(a)}",
+        "{~R(a, f(y))}",
+        "{~Q(z), R(z, x)}"
       ],
-      "constants": ["a"],
-      "hints": [
-        "Start by resolving clauses that involve the predicate P.",
-        "Clause 1 and clause 2 can be resolved on P."
-      ]
-    },
-    {
-      "id": "test",
-      "title": "Constant test",
-      "logicType": "predicate",
-      "clauses": [
-        "{A(x,x),B(y)}",
-        "{~A(x,f(x)),C(z)}"
-      ],
-      "constants": []
+      "constants": ["a"]
     }
   ]
 }
