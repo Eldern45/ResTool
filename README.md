@@ -51,12 +51,19 @@ Root component. Sets up `BrowserRouter` + `AppProvider`. Two routes:
 - `/` → `ExercisesPage`
 - `/workbench/:taskId` → `WorkbenchPage`
 
+### `src/context/appTypes.ts`
+Shared types and context object: `ExerciseStatus`, `AppState`, `AppContext` (createContext).
+Separated from `AppContext.tsx` so non-component exports don't break React Fast Refresh.
+
 ### `src/context/AppContext.tsx`
-Global state via React context. Provides:
+`AppProvider` component — global state provider. Manages:
 - `tasks` — built-in + imported tasks
 - `progress` — `Record<taskId, 'not-started' | 'in-progress' | 'solved'>` (persisted to `restool-progress` in localStorage)
 - `addTask(task)` — adds imported task, persists to `restool-imported-tasks` in localStorage
 - `setProgress(id, status)` — updates progress
+
+### `src/hooks/useApp.ts`
+Convenience hook wrapping `useContext(AppContext)` with null check.
 
 ### `src/hooks/useProofSession.ts`
 Main session hook. Wraps mutable `ProofSession` ref with React state.
@@ -93,24 +100,6 @@ Props: `workbenchMode?`, `onUndo?`, `onRedo?`, `onReset?`, `canUndo?`, `canRedo?
 - **ResolutionStep**: clause pair + σ1/σ2 + resolved literals + resolvent
 - **ProofSession** (`session.ts`): stateful proof manager tracking clauses, steps, undo/redo stacks, completion
 
-## Two-Substitution Model (σ1/σ2)
-
-Resolution uses **per-clause substitutions**, not a single shared MGU. This avoids
-ambiguity caused by hidden variable renaming when clauses share variable names.
-
-- **σ1** is applied to clause 1's remaining literals
-- **σ2** is applied to clause 2's remaining literals
-- Validation: `atom1·σ1 = atom2·σ2` (atoms must become identical)
-- Resolvent: `(C1 \ {L1})·σ1 ∪ (C2 \ {L2})·σ2`
-
-**Example** — resolving `{V(f(x), x)}` with `{~V(x, y), ~V(y, z), W(x, z)}` on V:
-```
-σ1 = {}
-σ2 = {x/f(x), y/x}
-Resolvent: {~V(x, z), W(f(x), z)}
-```
-Key gotcha: `x` in σ2's terms is clause 2's `x`, completely independent of clause 1's `x`.
-
 ## Answer-Based Resolution Flow
 
 Students provide the **expected resolvent**; system infers which complementary pair was resolved:
@@ -129,7 +118,7 @@ Students provide the **expected resolvent**; system infers which complementary p
 | 2 | Correct MGUs + "Fill MGUs" button (auto-populates inputs) |
 | 3 | Correct resolvent + "Fill Resolvent" button (only for `incorrect_resolvent`) |
 
-Error kinds with 2 levels: `no_complementary_literals`, `incorrect_mgu`, `unification_fails`, `mgu_not_most_general`, `no_matching_resolution`
+Error kinds with 2 levels: `no_complementary_literals`, `incorrect_mgu`, `unification_fails`, `mgu_not_most_general`
 Error kinds with 3 levels: `incorrect_resolvent`
 
 `diagnoseStep()` in `solver.ts` dispatches to per-error handlers. The solver renames c2's
@@ -144,20 +133,6 @@ variables before unifying (avoids name collisions), then un-renames to produce s
 | `restool-session-{taskId}` | `SaveData` (in-progress proof steps) |
 
 `fromSaveData` rebuilds the undo stack so that undo works correctly after page reload.
-
-## Conventions
-
-- All domain types use `readonly` properties (immutable data)
-- Tests use Vitest (`describe`/`it`/`expect`)
-- Test data lives in `tests.json`, loaded at runtime
-- Parser input format: `P(x, f(y))`, `~Q(a)`, `{x/a, y/f(b)}`
-- CLI runs via `tsx` (TypeScript execute), not compiled JS
-
-## TypeScript Gotcha: `erasableSyntaxOnly`
-
-`tsconfig.json` has `"erasableSyntaxOnly": true`. This **forbids**:
-- `enum` — use `const` object + type alias instead
-- Constructor parameter properties (`constructor(public readonly x: T)`) — expand to explicit declarations
 
 ## Naming Conventions (Parser Rules)
 
@@ -175,9 +150,7 @@ Built-in tasks live in `src/tasks/tasks.json`. Users can also import tasks at ru
 {
   "id": "unique-id",
   "title": "Display title",
-  "description": "Shown to student",
   "logicType": "propositional" | "predicate",
-  "difficulty": "beginner" | "intermediate" | "advanced",
   "clauses": ["{P(x)}", "{~P(a)}"],
   "constants": ["a"]   // optional; overrides default a-e
 }
@@ -189,4 +162,3 @@ For importing: wrap in `{ "tasks": [...] }` or provide a single task object — 
 
 - `npm run test` — unit + e2e tests via Vitest
 - Test files: `src/tests/core.test.ts` (unit), `src/tests/e2e.test.ts` (integration)
-- New resolution tests need both `mgu1` and `mgu2` fields in `tests.json`
