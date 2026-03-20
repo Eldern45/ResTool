@@ -46,7 +46,7 @@
     },
     {
       "id": "pred-03",
-      "title": "Multi-step predicate resolution",
+      "title": "Predicate resolution 3",
       "logicType": "predicate",
       "clauses": [
         "{~P(x), Q(x)}",
