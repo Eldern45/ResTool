@@ -1,0 +1,267 @@
+{
+  "parser": {
+    "validClauses": [
+      { "input": "{}", "expectedLiteralCount": 0 },
+      { "input": "{A}", "expectedLiteralCount": 1 },
+      { "input": "{A, B}", "expectedLiteralCount": 2 },
+      { "input": "{~A}", "expectedLiteralCount": 1 },
+      { "input": "{A, ~B, C}", "expectedLiteralCount": 3 },
+      { "input": "{P(x)}", "expectedLiteralCount": 1 },
+      { "input": "{P(x, y)}", "expectedLiteralCount": 1 },
+      { "input": "{~P(x)}", "expectedLiteralCount": 1 },
+      { "input": "{P(x), ~Q(x, y)}", "expectedLiteralCount": 2 },
+      { "input": "{P(f(x))}", "expectedLiteralCount": 1 },
+      { "input": "{P(f(g(x, y)))}", "expectedLiteralCount": 1 },
+      { "input": "{P(x, f(x)), Q(a)}", "expectedLiteralCount": 2 },
+      { "input": "{ P(x) , Q(y) }", "expectedLiteralCount": 2 }
+    ],
+    "invalidClauses": [
+      { "input": "", "description": "empty string" },
+      { "input": "{", "description": "unclosed brace" },
+      { "input": "{A,}", "description": "trailing comma" },
+      { "input": "{a}", "description": "lowercase predicate" },
+      { "input": "{P(,)}", "description": "empty arg before comma" },
+      { "input": "A", "description": "no braces" }
+    ],
+    "roundTrips": [
+      "{}",
+      "{A}",
+      "{A, B}",
+      "{~A}",
+      "{P(x)}",
+      "{~P(x, y)}",
+      "{P(f(x))}",
+      "{P(x), ~Q(x, y)}",
+      "{P(x, f(x)), Q(a)}"
+    ],
+    "validSubstitutions": [
+      { "input": "{}", "expectedBindingCount": 0 },
+      { "input": "{x/a}", "expectedBindingCount": 1 },
+      { "input": "{x/f(y)}", "expectedBindingCount": 1 },
+      { "input": "{x/a, y/b}", "expectedBindingCount": 2 },
+      { "input": "{x/f(y), z/g(a, b)}", "expectedBindingCount": 2 }
+    ]
+  },
+  "substitution": {
+    "applyToTerm": [
+      {
+        "term": "x",
+        "substitution": "{x/a}",
+        "expected": "a",
+        "constants": ["a"]
+      },
+      {
+        "term": "y",
+        "substitution": "{x/a}",
+        "expected": "y",
+        "constants": ["a"]
+      },
+      {
+        "term": "f(x)",
+        "substitution": "{x/a}",
+        "expected": "f(a)",
+        "constants": ["a"]
+      },
+      {
+        "term": "f(x, g(y))",
+        "substitution": "{x/a, y/b}",
+        "expected": "f(a, g(b))",
+        "constants": ["a", "b"]
+      }
+    ],
+    "applyToClause": [
+      {
+        "clause": "{P(x), Q(y)}",
+        "substitution": "{x/a, y/b}",
+        "expected": "{P(a), Q(b)}",
+        "constants": ["a", "b"]
+      },
+      {
+        "clause": "{P(x, f(x))}",
+        "substitution": "{x/a}",
+        "expected": "{P(a, f(a))}",
+        "constants": ["a"]
+      }
+    ]
+  },
+  "unification": {
+    "success": [
+      {
+        "atom1": "P(x)",
+        "atom2": "P(a)",
+        "description": "simple variable-constant",
+        "constants": ["a"]
+      },
+      {
+        "atom1": "P(x, y)",
+        "atom2": "P(a, b)",
+        "description": "two variables to constants",
+        "constants": ["a", "b"]
+      },
+      {
+        "atom1": "P(x)",
+        "atom2": "P(f(y))",
+        "description": "variable to function",
+        "constants": []
+      },
+      {
+        "atom1": "P(x, x)",
+        "atom2": "P(a, a)",
+        "description": "repeated variable same constant",
+        "constants": ["a"]
+      },
+      {
+        "atom1": "P(x, y)",
+        "atom2": "P(y, a)",
+        "description": "chain unification",
+        "constants": ["a"]
+      }
+    ],
+    "failure": [
+      {
+        "atom1": "P(a)",
+        "atom2": "P(b)",
+        "description": "different constants",
+        "constants": ["a", "b"]
+      },
+      {
+        "atom1": "P(x)",
+        "atom2": "Q(x)",
+        "description": "different predicates",
+        "constants": []
+      },
+      {
+        "atom1": "P(x)",
+        "atom2": "P(f(x))",
+        "description": "occurs check",
+        "constants": []
+      },
+      {
+        "atom1": "P(x, x)",
+        "atom2": "P(a, b)",
+        "description": "conflicting bindings",
+        "constants": ["a", "b"]
+      }
+    ]
+  },
+  "resolution": {
+    "validSteps": [
+      {
+        "description": "simple propositional resolution",
+        "clauses": ["{A, B}", "{~A, C}"],
+        "clause1Idx": 1,
+        "clause2Idx": 2,
+        "literal1": "A",
+        "literal2": "~A",
+        "mgu1": "{}",
+        "mgu2": "{}",
+        "expectedResolvent": "{B, C}",
+        "constants": []
+      },
+      {
+        "description": "propositional yielding empty clause",
+        "clauses": ["{A}", "{~A}"],
+        "clause1Idx": 1,
+        "clause2Idx": 2,
+        "literal1": "A",
+        "literal2": "~A",
+        "mgu1": "{}",
+        "mgu2": "{}",
+        "expectedResolvent": "{}",
+        "constants": []
+      },
+      {
+        "description": "predicate resolution with unification",
+        "clauses": ["{P(x), Q(x)}", "{~P(a)}"],
+        "clause1Idx": 1,
+        "clause2Idx": 2,
+        "literal1": "P(x)",
+        "literal2": "~P(a)",
+        "mgu1": "{x/a}",
+        "mgu2": "{}",
+        "expectedResolvent": "{Q(a)}",
+        "constants": ["a"]
+      },
+      {
+        "description": "predicate resolution with overlapping variables",
+        "clauses": ["{P(x), Q(x)}", "{~P(x), R(x)}"],
+        "clause1Idx": 1,
+        "clause2Idx": 2,
+        "literal1": "P(x)",
+        "literal2": "~P(x)",
+        "mgu1": "{}",
+        "mgu2": "{}",
+        "expectedResolvent": "{Q(x), R(x)}",
+        "constants": []
+      },
+      {
+        "description": "predicate resolution with function and overlapping vars",
+        "clauses": ["{P(f(x), x)}", "{~P(x, y), Q(y)}"],
+        "clause1Idx": 1,
+        "clause2Idx": 2,
+        "literal1": "P(f(x), x)",
+        "literal2": "~P(x, y)",
+        "mgu1": "{}",
+        "mgu2": "{x/f(x), y/x}",
+        "expectedResolvent": "{Q(x)}",
+        "constants": []
+      }
+    ],
+    "invalidSteps": [
+      {
+        "description": "clause index out of range",
+        "clauses": ["{A}", "{~A}"],
+        "clause1Idx": 1,
+        "clause2Idx": 5,
+        "literal1": "A",
+        "literal2": "~A",
+        "mgu1": "{}",
+        "mgu2": "{}",
+        "expectedError": "invalid_clause_index",
+        "constants": []
+      },
+      {
+        "description": "literals not complementary (both positive)",
+        "clauses": ["{A, B}", "{A, C}"],
+        "clause1Idx": 1,
+        "clause2Idx": 2,
+        "literal1": "A",
+        "literal2": "A",
+        "mgu1": "{}",
+        "mgu2": "{}",
+        "expectedError": "literals_not_complementary",
+        "constants": []
+      },
+      {
+        "description": "literal not in clause",
+        "clauses": ["{A, B}", "{~C}"],
+        "clause1Idx": 1,
+        "clause2Idx": 2,
+        "literal1": "A",
+        "literal2": "~A",
+        "mgu1": "{}",
+        "mgu2": "{}",
+        "expectedError": "literal_not_in_clause",
+        "constants": []
+      }
+    ]
+  },
+  "session": {
+    "undoTest": {
+      "task": {
+        "id": "test-undo",
+        "title": "Undo test",
+        "description": "Test undo",
+        "logicType": "propositional",
+        "difficulty": "beginner",
+        "clauses": ["{A, B}", "{~A}", "{~B}"]
+      },
+      "steps": [
+        { "clause1Idx": 1, "clause2Idx": 2, "literal": "A" },
+        { "clause1Idx": 1, "clause2Idx": 3, "literal": "B" }
+      ],
+      "expectedClauseCountAfterSteps": 5,
+      "expectedClauseCountAfterUndo": 4
+    }
+  }
+}
