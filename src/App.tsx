@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import { AppProvider } from './context/AppContext';
 import Header from './components/layout/Header';
 import ExercisesPage from './components/exercises/ExercisesPage';
@@ -23,6 +24,7 @@ export default function App() {
             element={<WorkbenchPage />}
           />
         </Routes>
+        <Analytics />
       </AppProvider>
     </BrowserRouter>
   );
