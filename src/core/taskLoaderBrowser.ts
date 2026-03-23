@@ -1,9 +1,11 @@
 import tasksData from '../tasks/tasks.json';
 import type { Task, TaskFile } from './types';
 
+const DISABLE_JSON_TASKS = true;
 const taskFile = tasksData as TaskFile;
 
 export function getAllTasks(): Task[] {
+  if (DISABLE_JSON_TASKS) return [];
   return taskFile.tasks as Task[];
 }
 
