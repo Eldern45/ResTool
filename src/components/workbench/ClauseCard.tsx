@@ -12,8 +12,8 @@ interface Props {
 
 function formatSub(sub: Substitution): string {
   if (sub.bindings.length === 0) return '';
-  const parts = sub.bindings.map(b => `${b.variable.name} ← ${printTerm(b.term)}`);
-  return `[${parts.join(', ')}]`;
+  const parts = sub.bindings.map(b => `[${b.variable.name} ← ${printTerm(b.term)}]`);
+  return `${parts.join(' ')}`;
 }
 
 function formatOrigin(step: ResolutionStep): string {

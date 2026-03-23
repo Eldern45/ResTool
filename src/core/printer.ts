@@ -20,7 +20,7 @@ export function printAtom(atom: Atom): string {
 
 export function printLiteral(literal: Literal): string {
   const atomStr = printAtom(literal.atom);
-  return literal.negated ? `~${atomStr}` : atomStr;
+  return literal.negated ? `¬${atomStr}` : atomStr;
 }
 
 export function printClause(clause: Clause): string {
@@ -32,8 +32,8 @@ export function printClause(clause: Clause): string {
 
 export function printSubstitution(sub: Substitution): string {
   if (sub.bindings.length === 0) {
-    return '{}';
+    return '[]';
   }
-  const parts = sub.bindings.map(b => `${b.variable.name}/${printTerm(b.term)}`);
-  return `{${parts.join(', ')}}`;
+  const parts = sub.bindings.map(b => `${b.variable.name}←${printTerm(b.term)}`);
+  return `[${parts.join(', ')}]`;
 }

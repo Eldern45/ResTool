@@ -63,9 +63,13 @@ function tokenize(input: string): Token[] {
       case '}': tokens.push({ type: TokenType.RBRACE, value: '}', position: i }); i++; break;
       case '(': tokens.push({ type: TokenType.LPAREN, value: '(', position: i }); i++; break;
       case ')': tokens.push({ type: TokenType.RPAREN, value: ')', position: i }); i++; break;
+      case '[': tokens.push({type: TokenType.LBRACE, value: '[', position: i }); i++; break;
+      case ']': tokens.push({type: TokenType.RBRACE, value: ']', position: i }); i++; break;
       case ',': tokens.push({ type: TokenType.COMMA, value: ',', position: i }); i++; break;
-      case '~': tokens.push({ type: TokenType.TILDE, value: '~', position: i }); i++; break;
-      case '/': tokens.push({ type: TokenType.SLASH, value: '/', position: i }); i++; break;
+      case '~': tokens.push({ type: TokenType.TILDE, value: '~', position: i }); i++; break; //TODO: fix tests
+      case '¬': tokens.push({ type: TokenType.TILDE, value: ch, position: i }); i++; break;
+      case '/': tokens.push({ type: TokenType.SLASH, value: '/', position: i }); i++; break; //TODO: fix tests
+      case '←': tokens.push({ type: TokenType.SLASH, value: ch, position: i }); i++; break;
       default: {
         if (/[a-zA-Z]/.test(ch)) {
           const start = i;

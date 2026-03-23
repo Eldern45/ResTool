@@ -4,7 +4,7 @@ interface Props {
   value: string;
   onChange: (value: string) => void;
   onCommaSplit?: () => void; // called when user presses ","
-  autoParensOnUppercase?: boolean; // resolvent: uppercase letter → auto-insert ()
+  convertSlash?: boolean;   // "/" → "←" (for MGU inputs)
   placeholder?: string;
   className?: string;
   autoFocus?: boolean;
@@ -15,7 +15,7 @@ export default function SmartInput({
   value,
   onChange,
   onCommaSplit,
-  autoParensOnUppercase = false,
+  convertSlash = false,
   placeholder,
   className = '',
   autoFocus = false,
@@ -44,10 +44,19 @@ export default function SmartInput({
     const pos = input.selectionStart ?? 0;
     const end = input.selectionEnd ?? pos;
 
-    // Dash → insert ~ (negation)
-    if (e.key === '-') {
+    // Dash or tilde → insert ¬ (negation)
+    if (e.key === '-' || e.key === '~') {
       e.preventDefault();
-      const newVal = value.slice(0, pos) + '~' + value.slice(end);
+      const newVal = value.slice(0, pos) + '¬' + value.slice(end);
+      onChange(newVal);
+      cursorRef.current = pos + 1;
+      return;
+    }
+
+    // Slash → insert ← (binding arrow) in MGU mode
+    if (convertSlash && e.key === '/') {
+      e.preventDefault();
+      const newVal = value.slice(0, pos) + '←' + value.slice(end);
       onChange(newVal);
       cursorRef.current = pos + 1;
       return;
@@ -66,15 +75,6 @@ export default function SmartInput({
       const newVal = value.slice(0, pos) + '()' + value.slice(end);
       onChange(newVal);
       cursorRef.current = pos + 1;
-      return;
-    }
-
-    // Auto-insert () after uppercase letter (predicates in resolvent)
-    if (autoParensOnUppercase && e.key.length === 1 && e.key >= 'A' && e.key <= 'Z' && !e.ctrlKey && !e.metaKey) {
-      e.preventDefault();
-      const newVal = value.slice(0, pos) + e.key + '()' + value.slice(end);
-      onChange(newVal);
-      cursorRef.current = pos + 2; // after letter + opening paren
       return;
     }
 

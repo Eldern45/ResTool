@@ -243,8 +243,8 @@ function diagnoseNoComplementary(
   const c1 = clauses[idx1 - 1];
   const c2 = clauses[idx2 - 1];
 
-  const preds1 = [...new Set(c1.literals.map(l => (l.negated ? '~' : '') + l.atom.predicate))];
-  const preds2 = [...new Set(c2.literals.map(l => (l.negated ? '~' : '') + l.atom.predicate))];
+  const preds1 = [...new Set(c1.literals.map(l => (l.negated ? '¬' : '') + l.atom.predicate))];
+  const preds2 = [...new Set(c2.literals.map(l => (l.negated ? '¬' : '') + l.atom.predicate))];
 
   // Find a valid alternative step
   const alt = findNextStep(clauses);

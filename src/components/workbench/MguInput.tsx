@@ -56,7 +56,8 @@ export default function MguInput({ label, bindings, onChange }: Props) {
               value={binding}
               onChange={val => updateBinding(i, val)}
               onCommaSplit={addBinding}
-              placeholder="x/a"
+              convertSlash
+              placeholder="x←a"
               className="w-24 border-b border-[#d1d5db] bg-transparent text-center text-base font-inter pb-1 pt-0.5 focus:outline-none focus:border-[#137fec] placeholder:text-[#d1d5db]"
             />
             <span className="text-base text-[#9ca3af] select-none">]</span>
