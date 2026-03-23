@@ -254,7 +254,7 @@ describe('Resolution - Valid Steps', () => {
 
 describe('Resolution - Invalid Steps', () => {
   it('invalid clause index', () => {
-    const clauses = [parseClause('{A}'), parseClause('{~A}')];
+    const clauses = [parseClause('{A}'), parseClause('{¬A}')];
     const result = validateResolutionByAnswer(
       clauses, 1, 5, EMPTY_SUBSTITUTION, EMPTY_SUBSTITUTION, parseClause('{}'),
     );
@@ -272,7 +272,7 @@ describe('Resolution - Invalid Steps', () => {
   });
 
   it('incorrect resolvent rejected', () => {
-    const clauses = [parseClause('{A, B}'), parseClause('{~A, C}')];
+    const clauses = [parseClause('{A, B}'), parseClause('{¬A, C}')];
     const result = validateResolutionByAnswer(
       clauses, 1, 2, EMPTY_SUBSTITUTION, EMPTY_SUBSTITUTION, parseClause('{A, C}'),
     );
@@ -283,7 +283,7 @@ describe('Resolution - Invalid Steps', () => {
 
 describe('Resolution - Empty Clause Detection', () => {
   it('detect empty clause derivation', () => {
-    const clauses = [parseClause('{A}'), parseClause('{~A}')];
+    const clauses = [parseClause('{A}'), parseClause('{¬A}')];
     const result = validateResolutionByAnswer(
       clauses, 1, 2, EMPTY_SUBSTITUTION, EMPTY_SUBSTITUTION, parseClause('{}'),
     );
@@ -297,7 +297,7 @@ describe('Resolution - Empty Clause Detection', () => {
     const constants = new Set(['a']);
     const clauses = [
       parseClause('{P(x), Q(x)}', constants),
-      parseClause('{~P(a), Q(a)}', constants),
+      parseClause('{¬P(a), Q(a)}', constants),
     ];
     const mgu1 = parseSubstitution('{x/a}', constants);
     const mgu2 = parseSubstitution('{}', constants);
@@ -317,7 +317,7 @@ describe('Resolution - Empty Clause Detection', () => {
 
 describe('Resolution - By Answer (propositional)', () => {
   it('correct resolvent accepted', () => {
-    const clauses = [parseClause('{A, B}'), parseClause('{~A, C}')];
+    const clauses = [parseClause('{A, B}'), parseClause('{¬A, C}')];
     const expected = parseClause('{B, C}');
     const result = validateResolutionByAnswer(
       clauses, 1, 2, EMPTY_SUBSTITUTION, EMPTY_SUBSTITUTION, expected,
@@ -329,7 +329,7 @@ describe('Resolution - By Answer (propositional)', () => {
   });
 
   it('incorrect resolvent rejected', () => {
-    const clauses = [parseClause('{A, B}'), parseClause('{~A, C}')];
+    const clauses = [parseClause('{A, B}'), parseClause('{¬A, C}')];
     const wrong = parseClause('{A, C}');
     const result = validateResolutionByAnswer(
       clauses, 1, 2, EMPTY_SUBSTITUTION, EMPTY_SUBSTITUTION, wrong,
@@ -339,9 +339,9 @@ describe('Resolution - By Answer (propositional)', () => {
   });
 
   it('multiple complementary pairs, correct resolvent disambiguates', () => {
-    // {A, B} vs {~A, ~B} has two pairs: (A,~A) -> {B,~B} and (B,~B) -> {A,~A}
-    const clauses = [parseClause('{A, B}'), parseClause('{~A, ~B}')];
-    const expected = parseClause('{B, ~B}');
+    // {A, B} vs {¬A, ¬B} has two pairs: (A,¬A) -> {B,¬B} and (B,¬B) -> {A,¬A}
+    const clauses = [parseClause('{A, B}'), parseClause('{¬A, ¬B}')];
+    const expected = parseClause('{B, ¬B}');
     const result = validateResolutionByAnswer(
       clauses, 1, 2, EMPTY_SUBSTITUTION, EMPTY_SUBSTITUTION, expected,
     );
@@ -349,7 +349,7 @@ describe('Resolution - By Answer (propositional)', () => {
   });
 
   it('empty resolvent accepted', () => {
-    const clauses = [parseClause('{A}'), parseClause('{~A}')];
+    const clauses = [parseClause('{A}'), parseClause('{¬A}')];
     const expected = parseClause('{}');
     const result = validateResolutionByAnswer(
       clauses, 1, 2, EMPTY_SUBSTITUTION, EMPTY_SUBSTITUTION, expected,
@@ -366,7 +366,7 @@ describe('Resolution - By Answer (predicate)', () => {
     const constants = new Set(['a']);
     const clauses = [
       parseClause('{P(x), Q(x)}', constants),
-      parseClause('{~P(a)}', constants),
+      parseClause('{¬P(a)}', constants),
     ];
     const sub1 = parseSubstitution('{x/a}', constants);
     const sub2 = parseSubstitution('{}', constants);
@@ -383,7 +383,7 @@ describe('Resolution - By Answer (predicate)', () => {
     const constants = new Set(['a']);
     const clauses = [
       parseClause('{P(x), Q(x)}', constants),
-      parseClause('{~P(a)}', constants),
+      parseClause('{¬P(a)}', constants),
     ];
     const sub1 = parseSubstitution('{x/a}', constants);
     const sub2 = parseSubstitution('{}', constants);
@@ -398,7 +398,7 @@ describe('Resolution - By Answer (predicate)', () => {
     const constants = new Set(['a', 'b']);
     const clauses = [
       parseClause('{P(x)}', constants),
-      parseClause('{~P(a)}', constants),
+      parseClause('{¬P(a)}', constants),
     ];
     const sub1 = parseSubstitution('{x/b}', constants);
     const sub2 = parseSubstitution('{}', constants);
@@ -421,9 +421,9 @@ describe('Session - Basic Operations', () => {
     const parsedClauses = (task.clauses as string[]).map(s => parseClause(s, constants));
     const session = new ProofSession(task, parsedClauses, constants);
 
-    // {A, B} + {~A} → {B}
+    // {A, B} + {¬A} → {B}
     session.resolveByAnswer(1, 2, EMPTY_SUBSTITUTION, EMPTY_SUBSTITUTION, parseClause('{B}'));
-    // {A, B} + {~B} → {A}
+    // {A, B} + {¬B} → {A}
     session.resolveByAnswer(1, 3, EMPTY_SUBSTITUTION, EMPTY_SUBSTITUTION, parseClause('{A}'));
 
     expect(session.getState().clauses.length).toBe(td.expectedClauseCountAfterSteps);
@@ -447,9 +447,9 @@ describe('Session - Basic Operations', () => {
     const task: Task = {
       id: 'test', title: 'Test',
       logicType: 'propositional',
-      clauses: ['{A}', '{~A}'],
+      clauses: ['{A}', '{¬A}'],
     };
-    const clauses = [parseClause('{A}'), parseClause('{~A}')];
+    const clauses = [parseClause('{A}'), parseClause('{¬A}')];
     const session = new ProofSession(task, clauses, new Set());
 
     expect(session.isComplete()).toBe(false);
@@ -464,13 +464,13 @@ describe('Session - Save/Load', () => {
     const task: Task = {
       id: 'prop-01', title: 'Test',
       logicType: 'propositional',
-      clauses: ['{A, B}', '{~A}', '{~B}'],
+      clauses: ['{A, B}', '{¬A}', '{¬B}'],
     };
     const constants = new Set<string>();
     const clauses = task.clauses.map(s => parseClause(s, constants));
     const session = new ProofSession(task, clauses, constants);
 
-    // {A, B} + {~A} → {B}
+    // {A, B} + {¬A} → {B}
     session.resolveByAnswer(1, 2, EMPTY_SUBSTITUTION, EMPTY_SUBSTITUTION, parseClause('{B}'));
 
     const saveData = session.toSaveData();
@@ -493,7 +493,7 @@ describe('Session - resolveByAnswer', () => {
     const task: Task = {
       id: 'test', title: 'Test',
       logicType: 'propositional',
-      clauses: ['{A, B}', '{~A, C}'],
+      clauses: ['{A, B}', '{¬A, C}'],
     };
     const constants = new Set<string>();
     const clauses = task.clauses.map(s => parseClause(s, constants));
@@ -510,7 +510,7 @@ describe('Session - resolveByAnswer', () => {
     const task: Task = {
       id: 'test', title: 'Test',
       logicType: 'propositional',
-      clauses: ['{A, B}', '{~A, C}'],
+      clauses: ['{A, B}', '{¬A, C}'],
     };
     const constants = new Set<string>();
     const clauses = task.clauses.map(s => parseClause(s, constants));

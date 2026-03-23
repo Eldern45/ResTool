@@ -84,8 +84,8 @@ describe('E2E: pred-02 (function symbols)', () => {
 
 describe('E2E: Undo/Redo', () => {
   it('undo restores state correctly', () => {
-    const task = getTaskById('prop-03')!;
-    // prop-03 clauses: {A}, {~A, B}, {~B, C}, {~C}
+    // Inline task — prop-03 was removed from tasks.json
+    const task = { id: 'prop-03', title: 'Undo test', logicType: 'propositional' as const, clauses: ['{A}', '{~A, B}', '{~B, C}', '{~C}'] };
     const c = new Set<string>();
     const clauses = task.clauses.map(s => parseClause(s, c));
     const session = new ProofSession(task, clauses, c);
@@ -170,7 +170,8 @@ describe('E2E: Error feedback', () => {
 
 describe('E2E: Task 111 (overlapping variables)', () => {
   it('completes proof with overlapping variable names using resolveByAnswer', () => {
-    const task = getTaskById('111')!;
+    // Inline task — 111 was removed from tasks.json
+    const task = { id: '111', title: 'Introduction', logicType: 'predicate' as const, clauses: ['{V(f(x), x)}', '{~V(x, y), ~V(y, z), W(x, z)}', '{~W(y, a)}'], constants: ['a'] };
     const c = getTaskConstants(task);
     const clauses = task.clauses.map(s => parseClause(s, c));
     const session = new ProofSession(task, clauses, c);
