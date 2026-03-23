@@ -36,13 +36,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [progress]);
 
   const addTask = useCallback((task: Task) => {
-    setTasks(prev => {
-      if (prev.some(t => t.id === task.id)) return prev;
-      const next = [...prev, task];
-      const imported = loadImportedTasks();
+    // Persist to localStorage first (with duplicate check), outside the state updater
+    // so StrictMode's double-invocation of updaters doesn't cause duplicate writes.
+    const imported = loadImportedTasks();
+    if (!imported.some(t => t.id === task.id)) {
       imported.push(task);
       localStorage.setItem(IMPORTED_TASKS_KEY, JSON.stringify(imported));
-      return next;
+    }
+    setTasks(prev => {
+      if (prev.some(t => t.id === task.id)) return prev;
+      return [...prev, task];
     });
   }, []);
 
