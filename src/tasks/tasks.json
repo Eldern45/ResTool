@@ -2,7 +2,7 @@
   "tasks": [
     {
       "id": "prop-01",
-      "title": "PNIGGGGERS",
+      "title": "Propositional resolution 1",
       "logicType": "propositional",
       "clauses": [
         "{A, B}",
