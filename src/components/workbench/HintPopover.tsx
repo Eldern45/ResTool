@@ -27,7 +27,7 @@ export default function HintPopover({
           <circle cx="7" cy="10.5" r="0.6" fill="#f59e0b" />
         </svg>
         <span className="font-lexend font-bold text-[10px] uppercase tracking-[0.5px] text-[#92400e]">
-          Hint {level}/{hintData.maxLevel}
+          Hint {1}/{hintData.maxLevel}
         </span>
       </div>
 
@@ -48,6 +48,16 @@ export default function HintPopover({
       {/* Level 2 */}
       {level >= 2 && (
         <div className="mt-3 pt-2.5 border-t border-[#fde68a]">
+          <div className="flex items-center gap-1.5 mb-2">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M7 1L1 13H13L7 1Z" stroke="#f59e0b" strokeWidth="1.2" strokeLinejoin="round" />
+              <path d="M7 5.5V8.5" stroke="#f59e0b" strokeWidth="1.2" strokeLinecap="round" />
+              <circle cx="7" cy="10.5" r="0.6" fill="#f59e0b" />
+            </svg>
+            <span className="font-lexend font-bold text-[10px] uppercase tracking-[0.5px] text-[#92400e]">
+              Hint {2}/{hintData.maxLevel}
+            </span>
+          </div>
           <p className="text-sm text-[#78350f] leading-relaxed font-medium">
             {hintData.level2Message}
           </p>
@@ -79,6 +89,16 @@ export default function HintPopover({
       {/* Level 3 (only incorrect_resolvent) */}
       {level >= 3 && hintData.maxLevel >= 3 && (
         <div className="mt-3 pt-2.5 border-t border-[#fde68a]">
+          <div className="flex items-center gap-1.5 mb-2">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M7 1L1 13H13L7 1Z" stroke="#f59e0b" strokeWidth="1.2" strokeLinejoin="round" />
+              <path d="M7 5.5V8.5" stroke="#f59e0b" strokeWidth="1.2" strokeLinecap="round" />
+              <circle cx="7" cy="10.5" r="0.6" fill="#f59e0b" />
+            </svg>
+            <span className="font-lexend font-bold text-[10px] uppercase tracking-[0.5px] text-[#92400e]">
+              Hint {3}/{hintData.maxLevel}
+            </span>
+          </div>
           <p className="text-sm text-[#78350f] leading-relaxed font-medium">
             {hintData.level3Message}
           </p>
