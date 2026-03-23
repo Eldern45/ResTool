@@ -61,11 +61,11 @@ export function useProofSession(task: Task) {
       const result = sessionRef.current.resolveByAnswer(idx1, idx2, sub1, sub2, resolvent);
       sync();
       return result;
-    } catch (e) {
+    } catch {
       return {
         valid: false,
         errorKind: 'parse_error',
-        message: e instanceof Error ? e.message : 'Parse error',
+        message: 'Malformed formula. Check your syntax.',
       };
     }
   }, [task, constants]);

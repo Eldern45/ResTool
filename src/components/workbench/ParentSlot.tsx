@@ -45,7 +45,7 @@ export default function ParentSlot({ label, clause, index, isInitial, variant }:
         </>
       ) : (
         <span className="text-xs text-[#9ca3af] text-center italic">
-          Select a clause
+          Click a clause on the left
         </span>
       )}
     </div>

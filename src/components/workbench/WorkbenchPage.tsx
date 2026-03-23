@@ -78,7 +78,7 @@ function WorkbenchInner({ task, setProgress }: {
         canUndo={state.steps.length > 0}
         canRedo={canRedo}
       />
-      <div className="flex-1 flex gap-6 p-6 overflow-hidden min-h-0">
+      <div className="flex-1 flex gap-6 p-6 min-h-0 overflow-hidden">
         {/* Knowledge Base — fixed width left panel */}
         <div className="w-[450px] shrink-0 min-h-0">
           <KnowledgeBase
@@ -88,12 +88,13 @@ function WorkbenchInner({ task, setProgress }: {
           />
         </div>
         {/* Workbench — fills remaining space */}
-        <div className="flex-1 min-w-0 min-h-0 overflow-auto">
+        <div className="flex-1 min-w-0 min-h-0">
           <WorkbenchPanel
             state={state}
             selected={selected}
             isPredicate={task.logicType === 'predicate'}
             constants={constants}
+            taskId={task.id}
             onResolve={handleResolve}
             onComplete={handleComplete}
           />

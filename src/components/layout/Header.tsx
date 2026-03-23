@@ -46,7 +46,7 @@ export default function Header({ workbenchMode, onUndo, onRedo, onReset, canUndo
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M2 4H14M2 8H14M2 12H14" stroke="#137fec" strokeWidth="1.5" strokeLinecap="round"/>
               </svg>
-              <span className="font-lexend font-bold text-sm text-[#137fec]">Resolutioner</span>
+              <span className="font-lexend font-bold text-sm text-[#137fec]">Resolution Proof</span>
             </div>
           )}
         </nav>

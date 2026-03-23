@@ -3,17 +3,63 @@ import type { Clause, SessionState, AnswerValidationResult, Substitution } from 
 import { EMPTY_SUBSTITUTION } from '../../core/types';
 import { parseSubstitution, parseClause } from '../../core/parser';
 import { diagnoseStep, type HintData, type SolverStep } from '../../core/solver';
-import { printSubstitution } from '../../core/printer';
+import { printSubstitution, printClause, printTerm } from '../../core/printer';
 import ParentSlot from './ParentSlot';
 import MguInput from './MguInput';
 import SmartInput from './SmartInput';
 import HintPopover from './HintPopover';
+
+function formatDerivation(state: SessionState, isPredicate: boolean): string {
+  const lines: string[] = [];
+  lines.push('Resolution Derivation');
+  lines.push('='.repeat(40));
+  lines.push('');
+
+  // Initial clauses
+  lines.push('Initial clauses:');
+  for (let i = 0; i < state.initialClauseCount; i++) {
+    lines.push(`  ${i + 1}. ${printClause(state.clauses[i])}`);
+  }
+  lines.push('');
+
+  // Derived steps
+  if (state.steps.length > 0) {
+    lines.push('Derivation:');
+    for (const step of state.steps) {
+      const resolventStr = printClause(step.resolvent);
+      let origin = `${step.clause1Index}, ${step.clause2Index}`;
+      if (isPredicate) {
+        const fmt = (sub: Substitution): string => {
+          if (sub.bindings.length === 0) return '';
+          const parts = sub.bindings.map(b => `[${b.variable.name} ← ${printTerm(b.term)}]`);
+          return ` ${parts.join(' ')}`;
+        };
+        origin = `${step.clause1Index}${fmt(step.mgu1)}, ${step.clause2Index}${fmt(step.mgu2)}`;
+      }
+      lines.push(`  ${step.resolventIndex}. ${resolventStr}  (${origin})`);
+    }
+    lines.push('');
+  }
+  return lines.join('\n');
+}
+
+function downloadDerivation(state: SessionState, isPredicate: boolean, taskId: string) {
+  const text = formatDerivation(state, isPredicate);
+  const blob = new Blob([text], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `derivation-${taskId}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 interface Props {
   state: SessionState;
   selected: [number | null, number | null];
   isPredicate: boolean;
   constants: ReadonlySet<string>;
+  taskId: string;
   onResolve: (idx1: number, idx2: number, sub1: string, sub2: string, resolvent: string) =>
     (AnswerValidationResult | { valid: false; errorKind: string; message: string });
   onComplete: () => void;
@@ -26,7 +72,7 @@ function bindingsToString(bindings: string[]): string {
   return `{${filled.join(', ')}}`;
 }
 
-export default function WorkbenchPanel({ state, selected, isPredicate, constants, onResolve, onComplete }: Props) {
+export default function WorkbenchPanel({ state, selected, isPredicate, constants, taskId, onResolve, onComplete }: Props) {
   const [mgu1Bindings, setMgu1Bindings] = useState<string[]>(['']);
   const [mgu2Bindings, setMgu2Bindings] = useState<string[]>(['']);
   const [resolventInner, setResolventInner] = useState('');
@@ -47,8 +93,7 @@ export default function WorkbenchPanel({ state, selected, isPredicate, constants
   const clause2: Clause | null = selected[1] ? (state.clauses[selected[1] - 1] ?? null) : null;
   const isInitial1 = selected[0] ? (selected[0] - 1) < state.initialClauseCount : false;
   const isInitial2 = selected[1] ? (selected[1] - 1) < state.initialClauseCount : false;
-  const canSubmit = selected[0] !== null && selected[1] !== null && resolventInner.trim() !== '';
-  const canSubmitEmpty = selected[0] !== null && selected[1] !== null;
+  const canSubmit = selected[0] !== null && selected[1] !== null;
 
   const handleSubmitWith = (inner: string) => {
     if (!selected[0] || !selected[1]) return;
@@ -110,10 +155,6 @@ export default function WorkbenchPanel({ state, selected, isPredicate, constants
   };
 
   const handleSubmit = () => handleSubmitWith(resolventInner);
-  const handleSubmitEmpty = () => {
-    setResolventInner('');
-    handleSubmitWith('');
-  };
 
   const handleHintClick = () => {
     if (!hintData) return;
@@ -143,12 +184,12 @@ export default function WorkbenchPanel({ state, selected, isPredicate, constants
   }, []);
 
   return (
-    <div className="flex flex-col h-full gap-4">
+    <div className="flex flex-col gap-4 h-full">
       {/* Title row */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="font-lexend font-bold text-2xl text-[#111418] leading-8">Resolution Workbench</h1>
-          <p className="font-lexend text-sm text-[#6b7280]">Perform manual steps and verify unifications.</p>
+          <h1 className="font-lexend font-bold text-2xl text-[#111418] leading-8">Working Area</h1>
+          <p className="font-lexend text-sm text-[#6b7280]">Select two clauses on the left, then enter the resolvent below.</p>
         </div>
         {/* Hint icon placeholder — hints appear inline after errors */}
         <div className="w-9" />
@@ -159,11 +200,21 @@ export default function WorkbenchPanel({ state, selected, isPredicate, constants
         <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
           <p className="text-green-800 font-lexend font-bold text-lg">Proof Complete!</p>
           <p className="text-green-600 text-sm mt-1">You have derived the empty clause.</p>
+          <button
+            onClick={() => downloadDerivation(state, isPredicate, taskId)}
+            className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-green-300 bg-white text-green-700 text-sm font-lexend font-bold hover:bg-green-50 transition-colors"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 2V10M5 7.5L8 10.5L11 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M3 13H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+            Download Derivation
+          </button>
         </div>
       )}
 
       {/* Main resolution flow card */}
-      <div className="flex-1 min-h-[500px] bg-white border border-[#e5e7eb] rounded-xl shadow-[0px_4px_20px_-4px_rgba(0,0,0,0.1)] overflow-hidden relative flex flex-col items-center justify-center p-8">
+      <div className="flex-1 min-h-0 overflow-y-auto bg-white border border-[#e5e7eb] rounded-xl shadow-[0px_4px_20px_-4px_rgba(0,0,0,0.1)] relative p-8">
         {/* Subtle gradient overlay */}
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
           style={{
@@ -171,7 +222,7 @@ export default function WorkbenchPanel({ state, selected, isPredicate, constants
           }}
         />
 
-        <div className="relative flex flex-col items-center gap-0 w-full max-w-[700px]">
+        <div className="flex flex-col items-center gap-0 w-full max-w-[700px] mx-auto">
           {/* Parent clause slots + MGU grid (predicate) */}
           {isPredicate ? (
             <>
@@ -258,21 +309,10 @@ export default function WorkbenchPanel({ state, selected, isPredicate, constants
 
           {/* Derived Resolvent card */}
           <div className="bg-white border border-[#e5e7eb] rounded-xl shadow-[0px_20px_25px_-5px_rgba(0,0,0,0.1),0px_8px_10px_-6px_rgba(0,0,0,0.1)] p-5 w-[320px] flex flex-col items-center">
-            {/* Label + empty clause button */}
-            <div className="flex items-center gap-2 mb-3">
-              <span className="font-lexend font-bold text-[10px] uppercase tracking-[1px] text-[#6b7280]">
-                Derived Resolvent
-              </span>
-              <button
-                onClick={handleSubmitEmpty}
-                disabled={!canSubmitEmpty || state.isComplete}
-                title="Submit empty clause (∅)"
-                className="flex items-center gap-1 px-2 py-0.5 rounded-md border border-[#e5e7eb] bg-[#f9fafb] text-[#6b7280] text-xs font-lexend font-bold hover:border-[#137fec] hover:text-[#137fec] hover:bg-[rgba(19,127,236,0.05)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                <span className="text-sm leading-none">∅</span>
-                <span>Empty</span>
-              </button>
-            </div>
+            {/* Label */}
+            <span className="font-lexend font-bold text-[10px] uppercase tracking-[1px] text-[#6b7280] mb-3">
+              Derived Resolvent
+            </span>
 
             {/* Input with decorative braces + help icon */}
             <div className="flex items-center gap-2 w-full mb-4">
@@ -282,14 +322,9 @@ export default function WorkbenchPanel({ state, selected, isPredicate, constants
                   <SmartInput
                     value={resolventInner}
                     onChange={val => { setResolventInner(val); setError(null); clearHints(); }}
-                    autoParensOnUppercase={isPredicate}
-                    placeholder="~Q(a), P(x)"
-                    className={`w-full py-2 text-center font-inter font-bold text-base focus:outline-none transition-colors bg-transparent ${
-                      error
-                        ? 'text-[#111418]'
-                        : 'text-[#111418]'
-                    }`}
-                    onKeyDown={e => { if (e.key === 'Enter' && canSubmit) handleSubmit(); }}
+                    placeholder={isPredicate ? '¬X(c), Y(c)' : '¬X, Y'}
+                    className={`w-full py-2 text-center font-inter font-bold text-base focus:outline-none transition-colors bg-transparent text-[#111418] placeholder:text-[#d1d5db] placeholder:font-normal`}
+                    onKeyDown={e => { if (e.key === 'Enter') handleSubmit(); }}
                   />
                 </div>
                 <span className="text-lg text-[#9ca3af] select-none ml-1">{'}'}</span>
