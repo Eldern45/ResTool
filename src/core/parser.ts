@@ -227,6 +227,13 @@ class Parser {
 
   private parseBinding(): Binding {
     const varToken = this.expect(TokenType.LOWER_IDENT, 'for variable name in binding');
+    if (this.peek().type === TokenType.LPAREN) {
+      throw new ParseError(
+        `Left side of a binding must be a variable, not a function. Write 'variable←${varToken.value}(…)', not '${varToken.value}(…)←variable'.`,
+        varToken.position,
+        this.input,
+      );
+    }
     if (this.constants.has(varToken.value)) {
       throw new ParseError(
         `'${varToken.value}' is a constant — you can only substitute variables`,
