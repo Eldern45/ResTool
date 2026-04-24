@@ -217,8 +217,9 @@ export function diagnoseStep(
     case 'no_complementary_literals':
       return diagnoseNoComplementary(clauses, idx1, idx2);
     case 'incorrect_mgu':
-    case 'unification_fails':
       return diagnoseIncorrectMgu(clauses, idx1, idx2, userSub1, userSub2);
+    case 'unification_fails':
+      return diagnoseUnificationFails(clauses, idx1, idx2);
     case 'mgu_not_most_general':
       return diagnoseMguNotGeneral(clauses, idx1, idx2);
     case 'incorrect_resolvent':
@@ -265,7 +266,45 @@ function diagnoseNoComplementary(
   };
 }
 
-// ── incorrect_mgu / unification_fails ────────────────────────
+// ── unification_fails ────────────────────────────────────────
+
+function diagnoseUnificationFails(
+  clauses: readonly Clause[],
+  idx1: number,
+  idx2: number,
+): HintData {
+  const c1 = clauses[idx1 - 1];
+  const c2 = clauses[idx2 - 1];
+
+  // Explain why each complementary pair fails
+  const details: string[] = [];
+  for (const l1 of c1.literals) {
+    for (const l2 of c2.literals) {
+      if (l1.negated !== l2.negated && l1.atom.predicate === l2.atom.predicate) {
+        const result = unifyAtoms(l1.atom, l2.atom);
+        if (!result.success) {
+          details.push(`${printLiteral(l1)} vs ${printLiteral(l2)}: ${result.reason}`);
+        }
+      }
+    }
+  }
+
+  const alt = findNextStep(clauses);
+
+  return {
+    errorKind: 'unification_fails',
+    maxLevel: 2,
+    level1Message:
+      'The complementary literals in these clauses cannot be unified — no substitution can make them equal.',
+    level1Details: details,
+    level2Message: alt
+      ? `Try resolving clause ${alt.idx1} with clause ${alt.idx2} instead.`
+      : 'No valid resolution steps found in the current clause set.',
+    suggestedStep: alt ?? undefined,
+  };
+}
+
+// ── incorrect_mgu ─────────────────────────────────────────────
 
 function diagnoseIncorrectMgu(
   clauses: readonly Clause[],

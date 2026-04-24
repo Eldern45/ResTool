@@ -8,7 +8,7 @@ import {
   atomsEqual,
   removeDuplicateLiterals,
 } from './substitution';
-import { validateStudentSubstitutions } from './unifier';
+import { validateStudentSubstitutions, unifyAtoms } from './unifier';
 
 
 // ============================================================
@@ -155,6 +155,16 @@ export function validateResolutionByAnswer(
 
   // No pair matched the MGUs
   if (mguError) return mguError;
+
+  // Distinguish: atoms fundamentally ununifiable vs student's substitution just wrong
+  const anyUnifiable = pairs.some(({ lit1, lit2 }) => unifyAtoms(lit1.atom, lit2.atom).success);
+  if (!anyUnifiable) {
+    return {
+      valid: false,
+      errorKind: 'unification_fails',
+      message: 'No complementary literal pair in these clauses can be unified.',
+    };
+  }
 
   return {
     valid: false,
