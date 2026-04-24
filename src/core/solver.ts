@@ -331,25 +331,9 @@ function diagnoseIncorrectMgu(
     }
   }
 
-  // Find correct step for this pair
-  const correctSteps = findStepsForPair(clauses, idx1, idx2);
-  const correct = correctSteps[0];
-
-  // If the pair is not unifiable at all, say so upfront
-  if (!correct) {
-    const alt = findNextStep(clauses);
-    return {
-      errorKind: 'incorrect_mgu',
-      maxLevel: 2,
-      level1Message:
-        'These atoms cannot be unified — no substitution exists that makes them equal.',
-      level1Details: details,
-      level2Message: alt
-        ? `Try resolving clause ${alt.idx1} with clause ${alt.idx2} instead.`
-        : 'No valid resolution steps found in the current clause set.',
-      suggestedStep: alt ?? undefined,
-    };
-  }
+  // Find correct step for this pair (guaranteed to exist: incorrect_mgu is only
+  // emitted when anyUnifiable === true, so findStepsForPair always returns a result)
+  const correct = findStepsForPair(clauses, idx1, idx2)[0];
 
   return {
     errorKind: 'incorrect_mgu',
