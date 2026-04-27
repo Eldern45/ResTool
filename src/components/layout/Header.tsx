@@ -12,6 +12,15 @@ interface HeaderProps {
 export default function Header({ workbenchMode, onUndo, onRedo, onReset, canUndo, canRedo }: HeaderProps) {
   const location = useLocation();
   const isWorkbench = location.pathname.startsWith('/workbench');
+  const isGuide = location.pathname.startsWith('/guide');
+  const isExercises = !isWorkbench && !isGuide;
+
+  const tabClass = (active: boolean) =>
+    `px-3 py-1.5 rounded-md font-lexend font-medium text-sm transition-colors ${
+      active
+        ? 'bg-white text-[#111418] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]'
+        : 'text-[#6b7280] hover:text-[#374151]'
+    }`;
 
   return (
     <header className="flex items-center justify-between px-6 py-3 border-b border-[#e5e7eb] bg-white shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] relative z-10">
@@ -27,15 +36,11 @@ export default function Header({ workbenchMode, onUndo, onRedo, onReset, canUndo
         </Link>
 
         <nav className="flex items-center gap-1 bg-[#f3f4f6] rounded-lg p-1">
-          <Link
-            to="/"
-            className={`px-3 py-1.5 rounded-md font-lexend font-medium text-sm transition-colors ${
-              !isWorkbench
-                ? 'bg-white text-[#111418] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]'
-                : 'text-[#6b7280] hover:text-[#374151]'
-            }`}
-          >
+          <Link to="/" className={tabClass(isExercises)}>
             Exercises
+          </Link>
+          <Link to="/guide" className={tabClass(isGuide)}>
+            Guide
           </Link>
           {workbenchMode && (
             <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md ${

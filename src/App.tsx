@@ -4,6 +4,7 @@ import { AppProvider } from './context/AppContext';
 import Header from './components/layout/Header';
 import ExercisesPage from './components/exercises/ExercisesPage';
 import WorkbenchPage from './components/workbench/WorkbenchPage';
+import GuidePage from './components/guide/GuidePage';
 
 export default function App() {
   return (
@@ -16,6 +17,15 @@ export default function App() {
               <div className="min-h-screen bg-gray-50 font-inter">
                 <Header />
                 <ExercisesPage />
+              </div>
+            }
+          />
+          <Route
+            path="/guide"
+            element={
+              <div className="min-h-screen bg-gray-50 font-inter">
+                <Header />
+                <GuidePage />
               </div>
             }
           />
