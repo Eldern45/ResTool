@@ -1,4 +1,9 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
+
+/** Handle exposed via ref so parent components can insert chars at cursor position. */
+export interface SmartInputHandle {
+  insertChar(char: string): void;
+}
 
 interface Props {
   value: string;
@@ -11,7 +16,7 @@ interface Props {
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 }
 
-export default function SmartInput({
+const SmartInput = forwardRef<SmartInputHandle, Props>(function SmartInput({
   value,
   onChange,
   onCommaSplit,
@@ -20,9 +25,11 @@ export default function SmartInput({
   className = '',
   autoFocus = false,
   onKeyDown: externalKeyDown,
-}: Props) {
+}, ref) {
   const inputRef = useRef<HTMLInputElement>(null);
   const cursorRef = useRef<number | null>(null);
+  /** Last known cursor position — saved on blur/click so ref.insertChar() inserts at the right spot */
+  const savedCursorRef = useRef<number>(0);
 
   // Restore cursor position after React re-render
   useEffect(() => {
@@ -38,6 +45,20 @@ export default function SmartInput({
       inputRef.current.focus();
     }
   }, [autoFocus]);
+
+  const saveCursor = () => {
+    savedCursorRef.current = inputRef.current?.selectionStart ?? value.length;
+  };
+
+  useImperativeHandle(ref, () => ({
+    insertChar(char: string) {
+      const pos = savedCursorRef.current;
+      const newVal = value.slice(0, pos) + char + value.slice(pos);
+      onChange(newVal);
+      cursorRef.current = pos + char.length;
+      inputRef.current?.focus();
+    },
+  }));
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const input = e.currentTarget;
@@ -82,7 +103,6 @@ export default function SmartInput({
     if (e.key === ')' && pos < value.length && value[pos] === ')') {
       e.preventDefault();
       cursorRef.current = pos + 1;
-      // Force re-render to move cursor
       onChange(value);
       return;
     }
@@ -108,10 +128,14 @@ export default function SmartInput({
       value={value}
       onChange={e => onChange(e.target.value)}
       onKeyDown={handleKeyDown}
+      onBlur={saveCursor}
+      onClick={saveCursor}
       placeholder={placeholder}
       className={className}
       autoComplete="off"
       spellCheck={false}
     />
   );
-}
+});
+
+export default SmartInput;

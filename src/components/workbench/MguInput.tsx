@@ -1,5 +1,5 @@
-import { useRef, useEffect } from 'react';
-import SmartInput from './SmartInput';
+import { useRef, useEffect, useState } from 'react';
+import SmartInput, { type SmartInputHandle } from './SmartInput';
 
 interface Props {
   label: string;
@@ -7,9 +7,33 @@ interface Props {
   onChange: (bindings: string[]) => void;
 }
 
+/** Char button: appears 7px to the right of the bracket, floats over the input. */
+function CharBtn({ label, onInsert }: { label: string; onInsert: () => void }) {
+  return (
+    <button
+      onMouseDown={e => { e.preventDefault(); onInsert(); }}
+      title={`Insert "${label}"`}
+      className="h-5 min-w-[1.25rem] px-1 rounded text-[11px] font-mono bg-gray-100 hover:bg-[rgba(19,127,236,0.1)] text-gray-500 hover:text-[#137fec] border border-gray-200 hover:border-[rgba(19,127,236,0.3)] transition-colors leading-none flex items-center justify-center select-none"
+    >
+      {label}
+    </button>
+  );
+}
+
 export default function MguInput({ label, bindings, onChange }: Props) {
   const focusNewRef = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputRefs = useRef<(SmartInputHandle | null)[]>([]);
+  const [hoveredRow, setHoveredRow] = useState<number | null>(null);
+  const rowTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const enterRow = (i: number) => {
+    if (rowTimeout.current) clearTimeout(rowTimeout.current);
+    setHoveredRow(i);
+  };
+  const leaveRow = () => {
+    rowTimeout.current = setTimeout(() => setHoveredRow(null), 80);
+  };
 
   // Focus the last input when a new binding is added
   useEffect(() => {
@@ -34,7 +58,6 @@ export default function MguInput({ label, bindings, onChange }: Props) {
 
   const removeBinding = (index: number) => {
     if (bindings.length <= 1) {
-      // Don't remove the last one, just clear it
       onChange(['']);
       return;
     }
@@ -50,9 +73,29 @@ export default function MguInput({ label, bindings, onChange }: Props) {
 
       <div className="flex flex-col gap-1.5 w-full items-center">
         {bindings.map((binding, i) => (
-          <div key={i} className="flex items-center gap-1.5">
+          /*
+           * Buttons are absolute with right: calc(100% + 4px) — 4px left of `[`.
+           * JS timeout (80ms) bridges the mouse-travel gap between row and buttons.
+           */
+          <div
+            key={i}
+            className="relative flex items-center gap-1.5"
+            onMouseEnter={() => enterRow(i)}
+            onMouseLeave={leaveRow}
+          >
+            {/* Char buttons — 4px to the left of `[`, zero layout footprint */}
+            <div
+              style={{ position: 'absolute', right: 'calc(100% + 4px)', top: '50%', transform: 'translateY(-50%)' }}
+              className={`flex gap-0.5 z-10 transition-opacity duration-150 ${hoveredRow === i ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+              onMouseEnter={() => enterRow(i)}
+              onMouseLeave={leaveRow}
+            >
+              <CharBtn label="←" onInsert={() => inputRefs.current[i]?.insertChar('←')} />
+            </div>
+
             <span className="text-base text-[#9ca3af] select-none">[</span>
             <SmartInput
+              ref={el => { inputRefs.current[i] = el; }}
               value={binding}
               onChange={val => updateBinding(i, val)}
               onCommaSplit={addBinding}

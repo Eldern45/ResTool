@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import type { Clause, SessionState, AnswerValidationResult, Substitution } from '../../core/types';
 import { EMPTY_SUBSTITUTION } from '../../core/types';
 import { parseSubstitution, parseClause } from '../../core/parser';
@@ -6,7 +6,7 @@ import { diagnoseStep, type HintData, type SolverStep } from '../../core/solver'
 import { printSubstitution, printClause, printTerm } from '../../core/printer';
 import ParentSlot from './ParentSlot';
 import MguInput from './MguInput';
-import SmartInput from './SmartInput';
+import SmartInput, { type SmartInputHandle } from './SmartInput';
 import HintPopover from './HintPopover';
 
 function formatDerivation(state: SessionState, isPredicate: boolean): string {
@@ -77,6 +77,11 @@ export default function WorkbenchPanel({ state, selected, isPredicate, constants
   const [mgu2Bindings, setMgu2Bindings] = useState<string[]>(['']);
   const [resolventInner, setResolventInner] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const resolventInputRef = useRef<SmartInputHandle>(null);
+  const [showNegBtn, setShowNegBtn] = useState(false);
+  const negBtnTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const enterNeg = () => { if (negBtnTimeout.current) clearTimeout(negBtnTimeout.current); setShowNegBtn(true); };
+  const leaveNeg = () => { negBtnTimeout.current = setTimeout(() => setShowNegBtn(false), 80); };
 
   // Hint state
   const [hintData, setHintData] = useState<HintData | null>(null);
@@ -316,10 +321,27 @@ export default function WorkbenchPanel({ state, selected, isPredicate, constants
 
             {/* Input with decorative braces + help icon */}
             <div className="flex items-center gap-2 w-full mb-4">
-              <div className="flex-1 flex items-center">
+              {/*
+               * ¬ button is absolute, right: calc(100% + 4px) — 4px to the left of `{`.
+               * JS timeout (80ms) bridges the gap when mouse moves from input to button.
+               */}
+              <div className="relative flex-1 flex items-center"
+                   onMouseEnter={enterNeg} onMouseLeave={leaveNeg}>
                 <span className="text-lg text-[#9ca3af] select-none mr-1">{'{'}</span>
+                {/* ¬ button — 4px to the left of `{`, zero layout footprint */}
+                <button
+                  onMouseDown={e => { e.preventDefault(); resolventInputRef.current?.insertChar('¬'); }}
+                  onMouseEnter={enterNeg}
+                  onMouseLeave={leaveNeg}
+                  title='Insert "¬"'
+                  style={{ position: 'absolute', right: 'calc(100% + 4px)', top: '50%', transform: 'translateY(-50%)' }}
+                  className={`h-5 min-w-[1.25rem] px-1 rounded text-[11px] font-mono bg-gray-100 hover:bg-[rgba(19,127,236,0.1)] text-gray-500 hover:text-[#137fec] border border-gray-200 hover:border-[rgba(19,127,236,0.3)] transition-colors leading-none flex items-center justify-center select-none z-10 ${showNegBtn ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+                >
+                  ¬
+                </button>
                 <div className="flex-1">
                   <SmartInput
+                    ref={resolventInputRef}
                     value={resolventInner}
                     onChange={val => { setResolventInner(val); setError(null); clearHints(); }}
                     placeholder={isPredicate ? '¬X(c), Y(c)' : '¬X, Y'}
