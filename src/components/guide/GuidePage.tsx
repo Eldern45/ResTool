@@ -37,7 +37,19 @@ export default function GuidePage() {
             <strong>Pick an exercise.</strong> On the{' '}
             <Anchor to="/">Exercises</Anchor> page, choose one of the
             built-in tasks. You can also import your own task as JSON via{' '}
-            <em>Load Exercise</em>.
+            <em>Load Exercise</em>. The file must follow this structure:
+            <pre className="mt-2 bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 font-mono text-xs overflow-x-auto text-gray-700 leading-relaxed">{`{
+  "id": "my-task-1",
+  "title": "My custom task",
+  "logicType": "predicate",
+  "clauses": ["{P(x), ~Q(x)}", "{Q(a)}", "{~P(a)}"],
+  "constants": ["a"]
+}`}</pre>
+            <p className="mt-1.5 text-xs text-gray-500">
+              <Code>logicType</Code> is <Code>"propositional"</Code> or <Code>"predicate"</Code>.{' '}
+              <Code>constants</Code> is optional — defaults to <Code>a b c d e</Code>.{' '}
+              To import multiple tasks at once, wrap the array in <Code>{'{ "tasks": [...] }'}</Code>.
+            </p>
           </li>
           <li>
             <strong>Select two clauses.</strong> In the workbench, click two
