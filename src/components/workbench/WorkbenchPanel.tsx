@@ -313,7 +313,7 @@ export default function WorkbenchPanel({ state, selected, isPredicate, constants
           )}
 
           {/* Derived Resolvent card */}
-          <div className="bg-white border border-[#e5e7eb] rounded-xl shadow-[0px_20px_25px_-5px_rgba(0,0,0,0.1),0px_8px_10px_-6px_rgba(0,0,0,0.1)] p-5 w-[320px] flex flex-col items-center">
+          <div className="bg-white border border-[#e5e7eb] rounded-xl shadow-[0px_20px_25px_-5px_rgba(0,0,0,0.1),0px_8px_10px_-6px_rgba(0,0,0,0.1)] py-5 px-[30.5px] w-[325px] flex flex-col items-center">
             {/* Label */}
             <span className="font-lexend font-bold text-[10px] uppercase tracking-[1px] text-[#6b7280] mb-3">
               Derived Resolvent
