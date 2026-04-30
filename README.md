@@ -26,6 +26,7 @@ src/
     layout/       — Header
     exercises/    — Task list page
     workbench/    — Resolution workbench page
+    guide/        — Static guide page
     common/       — Shared UI (Modal)
 ```
 
@@ -34,26 +35,27 @@ src/
 | File | Purpose |
 |------|---------|
 | `types.ts` | All domain types: `Term`, `Literal`, `Clause`, `Substitution`, `ResolutionStep`, `SessionState`, `Task`, `SaveData`, `ValidationError` |
-| `parser.ts` | Parses string → domain types. Uses `const` object for `TokenType` (not `enum` — see TS gotcha). Entry points: `parseClause`, `parseLiteral`, `parseSubstitution` |
+| `parser.ts` | Parses string → domain types. Uses a `const` object for `TokenType` rather than a TypeScript `enum`. Entry points: `parseClause`, `parseLiteral`, `parseSubstitution` |
 | `printer.ts` | Domain types → string. `printClause`, `printLiteral`, `printSubstitution`, `printAtom` |
 | `substitution.ts` | Apply/compose substitutions, variable ops: `applyToClause`, `applyToAtom`, `variablesInClause`, `renameVariables`, `removeDuplicateLiterals` |
 | `unifier.ts` | Robinson unification: `unifyAtoms(a1, a2): { success, mgu? }` |
 | `resolution.ts` | Answer-based validation: `validateResolutionByAnswer()`. Validates per-clause σ1/σ2 and infers which complementary pair was resolved |
 | `session.ts` | `ProofSession` class — stateful proof manager with undo/redo stacks, `resolveByAnswer()`, `toSaveData()`, `fromSaveData()` |
-| `solver.ts` | Hint engine: `findNextStep()`, `findStepsForPair()`, `diagnoseStep()`. Renames c2 variables before unifying to compute per-clause σ1/σ2 |
+| `solver.ts` | Hint engine: `findNextStep()`, `findStepsForPair()`, `diagnoseStep()`. Renames the second clause's variables before unifying to compute per-clause σ1/σ2 |
 | `taskLoader.ts` | Node.js task loader (CLI only — uses `fs`/`path`) |
 | `taskLoaderBrowser.ts` | Browser task loader (Vite JSON import). `getAllTasks()`, `getTaskById()`, `getTaskConstants()` |
 
 ## Frontend Files
 
 ### `src/App.tsx`
-Root component. Sets up `BrowserRouter` + `AppProvider`. Two routes:
+Root component. Sets up `BrowserRouter` + `AppProvider`. Three routes:
 - `/` → `ExercisesPage`
 - `/workbench/:taskId` → `WorkbenchPage`
+- `/guide` → `GuidePage`
 
 ### `src/context/appTypes.ts`
 Shared types and context object: `ExerciseStatus`, `AppState`, `AppContext` (createContext).
-Separated from `AppContext.tsx` so non-component exports don't break React Fast Refresh.
+Separated from `AppContext.tsx` so non-component exports do not break React Fast Refresh.
 
 ### `src/context/AppContext.tsx`
 `AppProvider` component — global state provider. Manages:
@@ -70,27 +72,30 @@ Main session hook. Wraps mutable `ProofSession` ref with React state.
 - Loads session from localStorage on mount (`restool-session-{taskId}`)
 - Saves to localStorage on every mutation via `sync()`
 - Exposes: `{ state, resolve, undo, redo, canRedo, reset, constants }`
-- `canRedo` is tracked as separate `useState` (not derived from session) for reactivity
+- `canRedo` is tracked as a separate `useState` (not derived from the session) for reactivity
 
 ### `src/components/layout/Header.tsx`
-Top navigation bar. In workbench mode (`workbenchMode` prop) shows Undo/Redo/Reset buttons.
+Top navigation bar with three tabs (Exercises, Workbench, Guide); the active tab is derived from the current path. In workbench mode (`workbenchMode` prop), the bar additionally shows Undo, Redo, and Reset controls.
 Props: `workbenchMode?`, `onUndo?`, `onRedo?`, `onReset?`, `canUndo?`, `canRedo?`
 
 ### `src/components/exercises/`
 - `ExercisesPage.tsx` — task list page with "Load Exercise" button
 - `ExerciseTable.tsx` — renders task rows, status badges, links to workbench
 - `StatusBadge.tsx` — colored badge for `not-started` / `in-progress` / `solved`
-- `LoadExerciseModal.tsx` — drag-and-drop JSON import modal; validates + calls `addTask`
+- `LoadExerciseModal.tsx` — drag-and-drop JSON import modal; validates and calls `addTask`
 
 ### `src/components/workbench/`
 - `WorkbenchPage.tsx` — route component. Resolves `taskId` param, wires up `useProofSession`, renders fixed-width KB panel (450px) + flex workbench
-- `WorkbenchPanel.tsx` — main resolution form. Manages MGU bindings, resolvent input, error/hint state. Calls `diagnoseStep` on failed submit
+- `WorkbenchPanel.tsx` — main resolution form. Manages MGU bindings, resolvent input, error/hint state. Calls `diagnoseStep` on failed submit. Renders an inline `¬` insertion button (`CharBtn`) immediately to the left of the resolvent input; the button is revealed on hover
 - `KnowledgeBase.tsx` — left panel showing all clauses (initial + derived); click to select for resolution
 - `ClauseCard.tsx` — single clause card with selection state
-- `ParentSlot.tsx` — placeholder card showing selected parent clause
-- `MguInput.tsx` — multi-binding MGU input with + button and comma shortcut
-- `SmartInput.tsx` — smart text input: auto-`()` on uppercase (predicate mode), auto-close `(`, `-` → `~`
-- `HintPopover.tsx` — amber hint panel shown below error when user clicks `?`. Progressive 2–3 level reveal with "Fill MGUs" / "Fill Resolvent" buttons
+- `ParentSlot.tsx` — placeholder card showing the selected parent clause
+- `MguInput.tsx` — multi-binding MGU input with `+` button and comma shortcut. Each binding row carries an inline `←` insertion button (`CharBtn` is defined inside this file); the button is revealed on hover of its row
+- `SmartInput.tsx` — text input with keystroke-time rewrites: `-` and `~` → `¬`, `/` → `←` (in MGU fields), `(` auto-closes to `()`. Exposes an imperative `insertChar(char: string)` method on its forwarded ref; `CharBtn` calls it to insert the symbol at the saved cursor position without losing focus
+- `HintPopover.tsx` — amber hint panel shown below the error when the user clicks `?`. Progressive 2–3 level reveal with "Fill MGUs" / "Fill Resolvent" buttons
+
+### `src/components/guide/`
+- `GuidePage.tsx` — static guide page reachable from the Guide link in the header. Renders three sections (Goal, How to use the tool, A bit of theory) via local presentational helpers (`Section`, `Subsection`, `Code`, `Callout`, `Anchor`). The component is stateless and depends only on `react-router-dom` for in-page navigation
 
 ## Key Concepts
 
@@ -102,11 +107,11 @@ Props: `workbenchMode?`, `onUndo?`, `onRedo?`, `onReset?`, `canUndo?`, `canRedo?
 
 ## Answer-Based Resolution Flow
 
-Students provide the **expected resolvent**; system infers which complementary pair was resolved:
+Students provide the **expected resolvent**; the system infers which complementary pair was resolved:
 - **Predicate**: clause indices → σ1 → σ2 → resolvent
 - **Propositional**: clause indices → resolvent (no MGUs needed)
 - Core functions: `validateResolutionByAnswer()` (resolution.ts), `resolveByAnswer()` (session.ts)
-- Empty clause: `∅ Empty` button bypasses resolvent input and submits `{}`
+- Empty clause: `∅ Empty` button bypasses the resolvent input and submits `{}`
 
 ## Hints System
 
@@ -121,8 +126,7 @@ Students provide the **expected resolvent**; system infers which complementary p
 Error kinds with 2 levels: `no_complementary_literals`, `incorrect_mgu`, `unification_fails`, `mgu_not_most_general`
 Error kinds with 3 levels: `incorrect_resolvent`
 
-`diagnoseStep()` in `solver.ts` dispatches to per-error handlers. The solver renames c2's
-variables before unifying (avoids name collisions), then un-renames to produce split σ1/σ2.
+`diagnoseStep()` in `solver.ts` dispatches to per-error handlers. The solver renames the second clause's variables before unifying (avoiding name collisions) and then un-renames the resulting bindings to produce split σ1/σ2.
 
 ## localStorage Keys
 
@@ -132,15 +136,15 @@ variables before unifying (avoids name collisions), then un-renames to produce s
 | `restool-imported-tasks` | `Task[]` (user-imported via JSON) |
 | `restool-session-{taskId}` | `SaveData` (in-progress proof steps) |
 
-`fromSaveData` rebuilds the undo stack so that undo works correctly after page reload.
+`fromSaveData` rebuilds the undo stack so that undo works correctly after a page reload.
 
 ## Naming Conventions (Parser Rules)
 
 - **Predicates**: `UPPERCASE` first letter — `P`, `Q`, `Likes`, `V`
-- **Variables**: `lowercase`, not in task's `constants` list — `x`, `y`, `z`
-- **Constants**: `lowercase`, declared in task's `constants` field — `a`, `b`
-- **Functions**: `lowercase` name with args — `f(x)`, `g(a, y)`
-- **Default constants** (when task omits `constants`): `a`, `b`, `c`, `d`, `e`
+- **Variables**: `lowercase`, not in the task's `constants` list — `x`, `y`, `z`
+- **Constants**: `lowercase`, declared in the task's `constants` field — `a`, `b`
+- **Functions**: `lowercase` name with arguments — `f(x)`, `g(a, y)`
+- **Default constants** (when a task omits `constants`): `a`, `b`, `c`, `d`, `e`
 
 ## Adding Tasks
 
@@ -152,8 +156,8 @@ Built-in tasks live in `src/tasks/tasks.json`. Users can also import tasks at ru
   "title": "Display title",
   "logicType": "propositional" | "predicate",
   "clauses": ["{P(x)}", "{~P(a)}"],
-  "constants": ["a"]   // optional; overrides default a-e
+  "constants": ["a"]   // optional; overrides the default a–e
 }
 ```
 
-For importing: wrap in `{ "tasks": [...] }` or provide a single task object — both formats accepted.
+For importing: wrap in `{ "tasks": [...] }` or provide a single task object — both formats are accepted.
