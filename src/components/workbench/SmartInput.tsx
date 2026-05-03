@@ -52,7 +52,10 @@ const SmartInput = forwardRef<SmartInputHandle, Props>(function SmartInput({
 
   useImperativeHandle(ref, () => ({
     insertChar(char: string) {
-      const pos = savedCursorRef.current;
+      // If input is still focused (e.g. button used onMouseDown+preventDefault), the live
+      // selectionStart reflects the current caret. Otherwise fall back to the last saved position.
+      const live = document.activeElement === inputRef.current ? inputRef.current?.selectionStart : null;
+      const pos = live ?? savedCursorRef.current;
       const newVal = value.slice(0, pos) + char + value.slice(pos);
       onChange(newVal);
       cursorRef.current = pos + char.length;
@@ -130,6 +133,8 @@ const SmartInput = forwardRef<SmartInputHandle, Props>(function SmartInput({
       onKeyDown={handleKeyDown}
       onBlur={saveCursor}
       onClick={saveCursor}
+      onKeyUp={saveCursor}
+      onSelect={saveCursor}
       placeholder={placeholder}
       className={className}
       autoComplete="off"
