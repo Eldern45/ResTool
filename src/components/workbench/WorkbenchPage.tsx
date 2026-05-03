@@ -1,7 +1,8 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { useApp } from '../../hooks/useApp';
 import { useProofSession } from '../../hooks/useProofSession';
+import { usePersistedState } from '../../hooks/usePersistedState';
 import { getTaskById } from '../../core/taskLoaderBrowser';
 import Header from '../layout/Header';
 import KnowledgeBase from './KnowledgeBase';
@@ -9,10 +10,14 @@ import WorkbenchPanel from './WorkbenchPanel';
 
 export default function WorkbenchPage() {
   const { taskId } = useParams<{ taskId: string }>();
-  const { tasks, setProgress } = useApp();
+  const { tasks, setProgress, setActiveTaskId } = useApp();
 
   // Look up in both built-in and imported tasks
   const task = tasks.find(t => t.id === taskId) ?? getTaskById(taskId ?? '');
+
+  useEffect(() => {
+    if (task) setActiveTaskId(task.id);
+  }, [task, setActiveTaskId]);
 
   if (!task) {
     return <Navigate to="/" replace />;
@@ -26,7 +31,10 @@ function WorkbenchInner({ task, setProgress }: {
   setProgress: (taskId: string, status: 'not-started' | 'in-progress' | 'solved') => void;
 }) {
   const { state, resolve, undo, redo, canRedo, reset, constants } = useProofSession(task);
-  const [selected, setSelected] = useState<[number | null, number | null]>([null, null]);
+  const [selected, setSelected] = usePersistedState<[number | null, number | null]>(
+    `restool-selected-${task.id}`,
+    [null, null],
+  );
 
   const handleSelect = useCallback((index: number) => {
     setSelected(prev => {
@@ -36,7 +44,7 @@ function WorkbenchInner({ task, setProgress }: {
       if (prev[1] === null) return [prev[0], index];
       return [prev[1], index];
     });
-  }, []);
+  }, [setSelected]);
 
   const handleResolve = useCallback((
     idx1: number, idx2: number, sub1: string, sub2: string, resolventStr: string
@@ -47,7 +55,7 @@ function WorkbenchInner({ task, setProgress }: {
       setSelected([null, null]);
     }
     return result;
-  }, [resolve, setProgress, task.id]);
+  }, [resolve, setProgress, setSelected, task.id]);
 
   const handleComplete = useCallback(() => {
     setProgress(task.id, 'solved');
@@ -56,17 +64,24 @@ function WorkbenchInner({ task, setProgress }: {
   const handleUndo = useCallback(() => {
     undo();
     setSelected([null, null]);
-  }, [undo]);
+  }, [undo, setSelected]);
 
   const handleRedo = useCallback(() => {
     redo();
     setSelected([null, null]);
-  }, [redo]);
+  }, [redo, setSelected]);
 
   const handleReset = useCallback(() => {
     reset();
     setSelected([null, null]);
-  }, [reset]);
+    try {
+      localStorage.removeItem(`restool-mgu1-${task.id}`);
+      localStorage.removeItem(`restool-mgu2-${task.id}`);
+      localStorage.removeItem(`restool-resolvent-${task.id}`);
+    } catch {
+      // Storage unavailable — silently ignore
+    }
+  }, [reset, setSelected, task.id]);
 
   return (
     <div className="flex flex-col h-screen bg-gray-50 font-inter">

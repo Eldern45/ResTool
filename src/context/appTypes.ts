@@ -8,6 +8,8 @@ export interface AppState {
   progress: Record<string, ExerciseStatus>;
   addTask: (task: Task) => void;
   setProgress: (taskId: string, status: ExerciseStatus) => void;
+  activeTaskId: string | null;
+  setActiveTaskId: (taskId: string | null) => void;
 }
 
 export const AppContext = createContext<AppState | null>(null);

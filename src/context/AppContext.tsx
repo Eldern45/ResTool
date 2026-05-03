@@ -5,6 +5,7 @@ import { AppContext, type ExerciseStatus } from './appTypes';
 
 const PROGRESS_KEY = 'restool-progress';
 const IMPORTED_TASKS_KEY = 'restool-imported-tasks';
+const ACTIVE_TASK_KEY = 'restool-active-task';
 
 function loadProgress(): Record<string, ExerciseStatus> {
   try {
@@ -24,16 +25,37 @@ function loadImportedTasks(): Task[] {
   }
 }
 
+function loadActiveTaskId(): string | null {
+  try {
+    return localStorage.getItem(ACTIVE_TASK_KEY);
+  } catch {
+    return null;
+  }
+}
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const [tasks, setTasks] = useState<Task[]>(() => [
     ...getAllTasks(),
     ...loadImportedTasks(),
   ]);
   const [progress, setProgressState] = useState<Record<string, ExerciseStatus>>(loadProgress);
+  const [activeTaskId, setActiveTaskIdState] = useState<string | null>(loadActiveTaskId);
 
   useEffect(() => {
     localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
   }, [progress]);
+
+  useEffect(() => {
+    if (activeTaskId === null) {
+      localStorage.removeItem(ACTIVE_TASK_KEY);
+    } else {
+      localStorage.setItem(ACTIVE_TASK_KEY, activeTaskId);
+    }
+  }, [activeTaskId]);
+
+  const setActiveTaskId = useCallback((taskId: string | null) => {
+    setActiveTaskIdState(taskId);
+  }, []);
 
   const addTask = useCallback((task: Task) => {
     // Persist to localStorage first (with duplicate check), outside the state updater
@@ -54,7 +76,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AppContext.Provider value={{ tasks, progress, addTask, setProgress }}>
+    <AppContext.Provider value={{ tasks, progress, addTask, setProgress, activeTaskId, setActiveTaskId }}>
       {children}
     </AppContext.Provider>
   );

@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
+import { useApp } from '../../hooks/useApp';
 
 interface HeaderProps {
   workbenchMode?: boolean;
@@ -11,9 +12,13 @@ interface HeaderProps {
 
 export default function Header({ workbenchMode, onUndo, onRedo, onReset, canUndo, canRedo }: HeaderProps) {
   const location = useLocation();
+  const { tasks, activeTaskId } = useApp();
   const isWorkbench = location.pathname.startsWith('/workbench');
   const isGuide = location.pathname.startsWith('/guide');
   const isExercises = !isWorkbench && !isGuide;
+
+  const activeTaskExists = activeTaskId !== null && tasks.some(t => t.id === activeTaskId);
+  const showResolutionTab = workbenchMode || activeTaskExists;
 
   const tabClass = (active: boolean) =>
     `px-3 py-1.5 rounded-md font-lexend font-medium text-sm transition-colors ${
@@ -42,17 +47,20 @@ export default function Header({ workbenchMode, onUndo, onRedo, onReset, canUndo
           <Link to="/guide" className={tabClass(isGuide)}>
             Guide
           </Link>
-          {workbenchMode && (
-            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md ${
-              isWorkbench
-                ? 'bg-white shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]'
-                : ''
-            }`}>
+          {showResolutionTab && (
+            <Link
+              to={`/workbench/${activeTaskId}`}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-colors ${
+                isWorkbench
+                  ? 'bg-white shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]'
+                  : 'hover:bg-gray-200'
+              }`}
+            >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M2 4H14M2 8H14M2 12H14" stroke="#137fec" strokeWidth="1.5" strokeLinecap="round"/>
               </svg>
               <span className="font-lexend font-bold text-sm text-[#137fec]">Resolution Proof</span>
-            </div>
+            </Link>
           )}
         </nav>
       </div>

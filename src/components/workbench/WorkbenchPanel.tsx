@@ -4,6 +4,7 @@ import { EMPTY_SUBSTITUTION } from '../../core/types';
 import { parseSubstitution, parseClause } from '../../core/parser';
 import { diagnoseStep, type HintData, type SolverStep } from '../../core/solver';
 import { printSubstitution, printClause, printTerm } from '../../core/printer';
+import { usePersistedState } from '../../hooks/usePersistedState';
 import ParentSlot from './ParentSlot';
 import MguInput from './MguInput';
 import SmartInput, { type SmartInputHandle } from './SmartInput';
@@ -73,9 +74,9 @@ function bindingsToString(bindings: string[]): string {
 }
 
 export default function WorkbenchPanel({ state, selected, isPredicate, constants, taskId, onResolve, onComplete }: Props) {
-  const [mgu1Bindings, setMgu1Bindings] = useState<string[]>(['']);
-  const [mgu2Bindings, setMgu2Bindings] = useState<string[]>(['']);
-  const [resolventInner, setResolventInner] = useState('');
+  const [mgu1Bindings, setMgu1Bindings] = usePersistedState<string[]>(`restool-mgu1-${taskId}`, ['']);
+  const [mgu2Bindings, setMgu2Bindings] = usePersistedState<string[]>(`restool-mgu2-${taskId}`, ['']);
+  const [resolventInner, setResolventInner] = usePersistedState<string>(`restool-resolvent-${taskId}`, '');
   const [error, setError] = useState<string | null>(null);
   const resolventInputRef = useRef<SmartInputHandle>(null);
   const [showNegBtn, setShowNegBtn] = useState(false);
@@ -178,7 +179,7 @@ export default function WorkbenchPanel({ state, selected, isPredicate, constants
     };
     setMgu1Bindings(toBindings(step.mgu1));
     setMgu2Bindings(toBindings(step.mgu2));
-  }, []);
+  }, [setMgu1Bindings, setMgu2Bindings]);
 
   const handleFillResolvent = useCallback((resolventStr: string) => {
     // resolventStr is like "{~Q(a), P(x)}", strip outer braces
@@ -186,7 +187,7 @@ export default function WorkbenchPanel({ state, selected, isPredicate, constants
       ? resolventStr.slice(1, -1)
       : resolventStr;
     setResolventInner(inner);
-  }, []);
+  }, [setResolventInner]);
 
   return (
     <div className="flex flex-col gap-4 h-full">
