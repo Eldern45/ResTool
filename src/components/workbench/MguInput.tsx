@@ -24,15 +24,15 @@ export default function MguInput({ label, bindings, onChange }: Props) {
   const focusNewRef = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRefs = useRef<(SmartInputHandle | null)[]>([]);
-  const [hoveredRow, setHoveredRow] = useState<number | null>(null);
-  const rowTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [showButtons, setShowButtons] = useState(false);
+  const hoverTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const enterRow = (i: number) => {
-    if (rowTimeout.current) clearTimeout(rowTimeout.current);
-    setHoveredRow(i);
+  const enterBox = () => {
+    if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
+    setShowButtons(true);
   };
-  const leaveRow = () => {
-    rowTimeout.current = setTimeout(() => setHoveredRow(null), 80);
+  const leaveBox = () => {
+    hoverTimeout.current = setTimeout(() => setShowButtons(false), 80);
   };
 
   // Focus the last input when a new binding is added
@@ -66,7 +66,12 @@ export default function MguInput({ label, bindings, onChange }: Props) {
   };
 
   return (
-    <div ref={containerRef} className="bg-[#f9fafb] border border-[#e5e7eb] rounded-xl shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] px-5 py-3 flex flex-col items-center gap-2 w-full">
+    <div
+      ref={containerRef}
+      onMouseEnter={enterBox}
+      onMouseLeave={leaveBox}
+      className="bg-[#f9fafb] border border-[#e5e7eb] rounded-xl shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] px-5 py-3 flex flex-col items-center gap-2 w-full"
+    >
       <span className="font-lexend font-bold text-[9px] uppercase tracking-[0.9px] text-[#9ca3af]">
         {label}
       </span>
@@ -75,20 +80,16 @@ export default function MguInput({ label, bindings, onChange }: Props) {
         {bindings.map((binding, i) => (
           /*
            * Buttons are absolute with right: calc(100% + 4px) — 4px left of `[`.
-           * JS timeout (80ms) bridges the mouse-travel gap between row and buttons.
+           * Visibility tracks the whole MGU box, so hovering anywhere in the box reveals all buttons.
            */
           <div
             key={i}
             className="relative flex items-center gap-1.5"
-            onMouseEnter={() => enterRow(i)}
-            onMouseLeave={leaveRow}
           >
             {/* Char buttons — 4px to the left of `[`, zero layout footprint */}
             <div
               style={{ position: 'absolute', right: 'calc(100% + 4px)', top: '50%', transform: 'translateY(-50%)' }}
-              className={`flex gap-0.5 z-10 transition-opacity duration-150 ${hoveredRow === i ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
-              onMouseEnter={() => enterRow(i)}
-              onMouseLeave={leaveRow}
+              className={`flex gap-0.5 z-10 transition-opacity duration-150 ${showButtons ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
             >
               <CharBtn label="←" onInsert={() => inputRefs.current[i]?.insertChar('←')} />
             </div>

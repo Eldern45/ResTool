@@ -313,7 +313,11 @@ export default function WorkbenchPanel({ state, selected, isPredicate, constants
           )}
 
           {/* Derived Resolvent card */}
-          <div className="bg-white border border-[#e5e7eb] rounded-xl shadow-[0px_20px_25px_-5px_rgba(0,0,0,0.1),0px_8px_10px_-6px_rgba(0,0,0,0.1)] py-5 px-[30.5px] w-[325px] flex flex-col items-center">
+          <div
+            onMouseEnter={enterNeg}
+            onMouseLeave={leaveNeg}
+            className="bg-white border border-[#e5e7eb] rounded-xl shadow-[0px_20px_25px_-5px_rgba(0,0,0,0.1),0px_8px_10px_-6px_rgba(0,0,0,0.1)] py-5 px-[30.5px] w-[325px] flex flex-col items-center"
+          >
             {/* Label */}
             <span className="font-lexend font-bold text-[10px] uppercase tracking-[1px] text-[#6b7280] mb-3">
               Derived Resolvent
@@ -323,16 +327,13 @@ export default function WorkbenchPanel({ state, selected, isPredicate, constants
             <div className="flex items-center gap-2 w-full mb-4">
               {/*
                * ¬ button is absolute, right: calc(100% + 4px) — 4px to the left of `{`.
-               * JS timeout (80ms) bridges the gap when mouse moves from input to button.
+               * Visibility is driven by hover on the whole Derived Resolvent card.
                */}
-              <div className="relative flex-1 flex items-center"
-                   onMouseEnter={enterNeg} onMouseLeave={leaveNeg}>
+              <div className="relative flex-1 flex items-center">
                 <span className="text-lg text-[#9ca3af] select-none mr-1">{'{'}</span>
                 {/* ¬ button — 4px to the left of `{`, zero layout footprint */}
                 <button
                   onMouseDown={e => { e.preventDefault(); resolventInputRef.current?.insertChar('¬'); }}
-                  onMouseEnter={enterNeg}
-                  onMouseLeave={leaveNeg}
                   title='Insert "¬"'
                   style={{ position: 'absolute', right: 'calc(100% + 4px)', top: '50%', transform: 'translateY(-50%)' }}
                   className={`h-5 min-w-[1.25rem] px-1 rounded text-[11px] font-mono bg-gray-100 hover:bg-[rgba(19,127,236,0.1)] text-gray-500 hover:text-[#137fec] border border-gray-200 hover:border-[rgba(19,127,236,0.3)] transition-colors leading-none flex items-center justify-center select-none z-10 ${showNegBtn ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
