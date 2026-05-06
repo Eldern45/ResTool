@@ -78,7 +78,7 @@ const SmartInput = forwardRef<SmartInputHandle, Props>(function SmartInput({
     }
 
     // Slash → insert ← (binding arrow) in MGU mode
-    if (convertSlash && e.key === '/') {
+    if (convertSlash && e.key === '/' || e.key === '<') {
       e.preventDefault();
       const newVal = value.slice(0, pos) + '←' + value.slice(end);
       onChange(newVal);
